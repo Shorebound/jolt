@@ -621,8 +621,11 @@ if (WIN32)
 
 			# Resolve binding headers from the tracked source shader directory and emit DXIL
 			# into Jolt's binary tree so generated artefacts never land in the source checkout.
+			# Older Windows SDK DXC rejects CMake forward-slash include paths, so pass the
+			# already-absolute source directory in native Windows form.
 			cmake_path(SET JOLT_PHYSICS_SHADER_SOURCE_DIR NORMALIZE "${JOLT_PHYSICS_ROOT}/Shaders")
 			cmake_path(ABSOLUTE_PATH JOLT_PHYSICS_SHADER_SOURCE_DIR NORMALIZE)
+			cmake_path(NATIVE_PATH JOLT_PHYSICS_SHADER_SOURCE_DIR JOLT_PHYSICS_SHADER_INCLUDE_DIR)
 			cmake_path(SET JOLT_PHYSICS_DXIL_SHADER_DIR NORMALIZE "${CMAKE_CURRENT_BINARY_DIR}/Jolt/Shaders")
 			file(MAKE_DIRECTORY "${JOLT_PHYSICS_DXIL_SHADER_DIR}")
 
@@ -630,7 +633,7 @@ if (WIN32)
 				cmake_path(GET SHADER STEM SHADER_STEM)
 				set(DXIL_SHADER "${JOLT_PHYSICS_DXIL_SHADER_DIR}/${SHADER_STEM}.dxil")
 				add_custom_command(OUTPUT ${DXIL_SHADER}
-					COMMAND ${DXC_COMPILER} -E main -T cs_6_0 -I ${JOLT_PHYSICS_SHADER_SOURCE_DIR} -WX -all_resources_bound ${DXC_OPTIMIZATION_FLAGS} ${DXC_DEBUG_FLAGS} ${SHADER} -Fo ${DXIL_SHADER}
+					COMMAND ${DXC_COMPILER} -E main -T cs_6_0 -I ${JOLT_PHYSICS_SHADER_INCLUDE_DIR} -WX -all_resources_bound ${DXC_OPTIMIZATION_FLAGS} ${DXC_DEBUG_FLAGS} ${SHADER} -Fo ${DXIL_SHADER}
 					DEPENDS ${SHADER} ${JOLT_PHYSICS_SHADER_HEADERS} # Currently don't have a way to detect header dependencies, so making dependent on all
 					COMMENT "Compiling HLSL ${SHADER}")
 				list(APPEND JOLT_PHYSICS_DXIL_SHADERS ${DXIL_SHADER})
